@@ -15,31 +15,29 @@
   #app { height: 100%; width: 100%; display: flex; flex-direction: column; }
 
   /* Lobby */
-  .lobby { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; }
-  .lobby h1 { font-size: clamp(28px, 6vw, 48px); text-align: center; }
-  .lobby p { font-size: 16px; opacity: 0.8; text-align: center; max-width: 500px; }
+  .lobby { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; text-align: center; }
+  .lobby h1 { font-size: clamp(28px, 6vw, 48px); }
+  .lobby p { font-size: 16px; opacity: 0.8; max-width: 500px; line-height: 1.5; }
   .btn {
-    padding: 14px 28px; font-size: 18px; font-weight: 600;
-    background: #27ae60; color: white; border: none; border-radius: 8px;
+    padding: 16px 32px; font-size: 18px; font-weight: 600;
+    background: #27ae60; color: white; border: none; border-radius: 12px;
     cursor: pointer; transition: transform 0.1s, background 0.2s;
+    width: 100%; max-width: 300px;
   }
   .btn:active { transform: scale(0.97); }
   .btn:disabled { background: #7f8c8d; cursor: not-allowed; }
   .btn-secondary { background: #2980b9; }
   .btn-danger { background: #c0392b; }
-  .link-box {
-    background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;
-    font-family: monospace; font-size: 13px; word-break: break-all; max-width: 90vw;
-  }
+  .btn-share { background: #8e44ad; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
   /* Game */
   .game-header {
-    padding: 8px 12px; background: rgba(0,0,0,0.3);
+    padding: 10px 12px; background: rgba(0,0,0,0.3);
     display: flex; justify-content: space-between; align-items: center;
     font-size: 14px; flex-wrap: wrap; gap: 8px;
   }
   .game-header .role { font-weight: bold; color: #f1c40f; }
-  .game-header .hint-info { color: #3498db; }
+  .game-header .hint-info { color: #3498db; text-align: right; }
 
   .grid-wrap {
     flex: 1; display: flex; align-items: center; justify-content: center;
@@ -67,41 +65,42 @@
   }
   .card:active { transform: scale(0.95); }
   .card.green { background: #27ae60; color: white; }
-  .card.black { background: #2c3e50; color: #2c3e50; }
-  .card.revealed { background: #27ae60; color: white; }
+  .card.black { background: #2c3e50; color: #2c3e50; } /* Невидимая черная для угадывающего */
+  .card.revealed { background: #27ae60; color: white; border: 2px solid #fff; }
   .card.missed { background: #f39c12; color: white; }
   .card.disabled { cursor: default; opacity: 0.95; }
 
   .captain-panel {
-    padding: 10px; background: rgba(0,0,0,0.4);
+    padding: 12px; background: rgba(0,0,0,0.4);
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     justify-content: center;
   }
   .captain-panel input {
-    padding: 10px; border: none; border-radius: 6px;
+    padding: 12px; border: none; border-radius: 8px;
     font-size: 16px; background: white; color: #2c3e50;
   }
   .captain-panel input[type="text"] { flex: 1; min-width: 120px; }
-  .captain-panel input[type="number"] { width: 70px; }
+  .captain-panel input[type="number"] { width: 70px; text-align: center; }
 
   /* Modal */
   .modal-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
     display: none; align-items: center; justify-content: center; z-index: 100;
-    padding: 20px;
+    padding: 20px; backdrop-filter: blur(4px);
   }
   .modal-bg.active { display: flex; }
   .modal {
     background: #34495e; padding: 24px; border-radius: 12px;
-    max-width: 400px; width: 100%; text-align: center;
+    max-width: 350px; width: 100%; text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
   }
   .modal h3 { margin-bottom: 16px; font-size: 20px; }
   .modal .word { font-size: 28px; color: #f1c40f; margin: 12px 0; font-weight: bold; }
   .modal .buttons { display: flex; gap: 10px; margin-top: 20px; }
-  .modal .buttons .btn { flex: 1; }
+  .modal .buttons .btn { flex: 1; padding: 12px; font-size: 16px; }
 
   .end-screen {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9);
     display: none; align-items: center; justify-content: center;
     flex-direction: column; gap: 20px; z-index: 200; padding: 20px;
   }
@@ -121,22 +120,22 @@
     <p>Выбрать эту карточку?</p>
     <div class="buttons">
       <button class="btn btn-danger" onclick="closeConfirm()">Отмена</button>
-      <button class="btn" onclick="confirmChoice()">Да, выбрать</button>
+      <button class="btn" onclick="confirmChoice()">Да</button>
     </div>
   </div>
 </div>
 
 <div class="end-screen" id="endScreen">
   <h2 id="endTitle"></h2>
-  <p id="endMessage"></p>
-  <button class="btn" onclick="location.href=location.pathname">Новая игра</button>
+  <p id="endMessage" style="font-size: 18px; opacity: 0.9;"></p>
+  <button class="btn" onclick="location.href=location.pathname">🔄 Новая игра</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ======= НАСТРОЙКИ =======
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// ======= НАСТРОЙКИ SUPABASE =======
+const SUPABASE_URL = 'https://xsmdcljfpaxdtdiiraqu.supabase.co'; // Без /rest/v1/
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzbWRjbGpmcGF4ZHRkaWlyYXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MTM1MjcsImV4cCI6MjEwOTI4OTUyN30.Vw_wh6iF5ldrUYb61lnKo6pba1sGfZkbZ1YufMdKvMA';
 
 // ======= СЛОВАРЬ =======
 const WORDS = [
@@ -149,18 +148,16 @@ const WORDS = [
   'замок','башня','музей','библиотека','магазин','рынок','ресторан','кафе','банк','почта',
   'король','рыцарь','принцесса','дракон','магия','меч','щит','корабль','остров','пират',
   'пирамида','сфинкс','фараон','пустыня','оазис','верблюд','джунгли','тигр','слон','попугай',
-  'робот','ракета','планета','галактика','инопланетянин','лазер','спутник','космонавт','марс','венера'
+  'робот','ракета','планета','галактика','лазер','спутник','космонавт','марс','венера','метеор'
 ];
 
-// ======= SUPABASE =======
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const app = document.getElementById('app');
 let gameId = null;
-let myPlayer = null;     // 1 или 2
+let myPlayer = null;
 let gameState = null;
 let pendingChoice = null;
 
-// ======= УТИЛИТЫ =======
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -190,23 +187,42 @@ function renderLobby(mode) {
   app.innerHTML = `
     <div class="lobby">
       <h1>🕵️ Codenames Duo</h1>
-      <p>Кооперативная игра на двоих. Поделитесь ссылкой с напарником.</p>
+      <p>Кооперативная игра на двоих. Поделитесь ссылкой с напарником, чтобы он присоединился.</p>
       ${mode === 'creating' ? `
         <p>Создаём новую игру...</p>
       ` : mode === 'waiting' ? `
-        <p>Ожидание второго игрока...</p>
-        <div class="link-box">${location.href}</div>
+        <button class="btn btn-share" onclick="shareGame()">📲 Поделиться с напарником</button>
+        <p style="font-size: 14px; opacity: 0.6;">или скопируйте ссылку вручную</p>
         <button class="btn btn-secondary" onclick="copyLink()">📋 Скопировать ссылку</button>
       ` : `
-        <button class="btn" onclick="createGame()">🎮 Начать игру</button>
+        <button class="btn" onclick="createGame()">🎮 Начать новую игру</button>
       `}
     </div>
   `;
 }
 
+async function shareGame() {
+  const shareData = {
+    title: 'Codenames Duo',
+    text: 'Присоединяйся к игре в Codenames!',
+    url: location.href
+  };
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch (err) {
+      console.log('Share canceled');
+    }
+  } else {
+    copyLink();
+  }
+}
+
 function copyLink() {
   navigator.clipboard.writeText(location.href).then(() => {
-    alert('Ссылка скопирована!');
+    alert('Ссылка скопирована! Отправьте её напарнику в мессенджер.');
+  }).catch(() => {
+    prompt('Скопируйте ссылку вручную:', location.href);
   });
 }
 
@@ -227,7 +243,7 @@ async function createGame() {
     status: 'waiting'
   }).select().single();
 
-  if (error) { alert('Ошибка: ' + error.message); renderLobby(); return; }
+  if (error) { alert('Ошибка БД: ' + error.message); renderLobby(); return; }
 
   gameId = data.id;
   setMyPlayer(1);
@@ -249,7 +265,6 @@ async function joinGame(id) {
   }
 
   if (!loadMyPlayer()) {
-    // Мы второй игрок
     setMyPlayer(2);
     if (data.status === 'waiting') {
       await sb.from('games').update({ status: 'playing' }).eq('id', id);
@@ -278,9 +293,7 @@ function renderGame() {
   if (!gameState) return;
   const s = gameState;
   const isCaptain = s.current_captain === myPlayer || s.current_captain === null;
-  const otherPlayer = myPlayer === 1 ? 2 : 1;
-  const captainGreen = s.current_captain ? s[`player${s.current_captain}_green`] : [];
-
+  
   let headerHTML = '';
   if (s.status === 'playing') {
     const role = isCaptain ? '🎯 Вы — капитан' : '🔍 Вы — угадывающий';
@@ -296,7 +309,6 @@ function renderGame() {
       <div class="game-header">
         <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
         <span class="hint-info">${hintInfo}</span>
-        <span>Открыто: ${s.revealed.length}/16</span>
       </div>
     `;
   }
@@ -314,15 +326,11 @@ function renderGame() {
     } else if (s.missed.includes(i)) {
       cls += ' missed disabled';
     } else if (isCaptain) {
-      // Капитан видит свою раскладку
       if (s[`player${myPlayer}_green`].includes(i)) cls += ' green';
       else if (s.black.includes(i)) cls += ' black';
-      // бежевый по умолчанию
     } else {
-      // Угадывающий может кликать по закрытым
       clickable = s.guesses_left > 0;
-      if (clickable) cls += '';
-      else cls += ' disabled';
+      if (!clickable) cls += ' disabled';
     }
 
     const onclick = clickable ? `onclick="chooseCard(${i})"` : '';
@@ -332,12 +340,12 @@ function renderGame() {
 
   let panelHTML = '';
   if (s.status === 'playing' && isCaptain && !s.hint_word) {
-    const myGreenCount = s[`player${myPlayer}_green`].filter(i => !s.revealed.includes(i)).length;
+    const myGreenLeft = s[`player${myPlayer}_green`].filter(idx => !s.revealed.includes(idx)).length;
     panelHTML = `
       <div class="captain-panel">
-        <input type="text" id="hintWord" placeholder="Слово-подсказка" maxlength="20">
-        <input type="number" id="hintCount" min="1" max="${myGreenCount}" value="1" placeholder="Число">
-        <button class="btn" onclick="submitHint()">Ищи</button>
+        <input type="text" id="hintWord" placeholder="Слово" maxlength="20" autocomplete="off">
+        <input type="number" id="hintCount" min="1" max="${myGreenLeft}" value="1">
+        <button class="btn" style="width: auto; padding: 12px 20px;" onclick="submitHint()">Ищи</button>
       </div>
     `;
   }
@@ -374,25 +382,21 @@ async function confirmChoice() {
   let status = 'playing';
 
   if (s.black.includes(idx)) {
-    // Проигрыш
     status = 'finished';
     winner = 0;
   } else if (captainGreen.includes(idx)) {
-    // Угадал
     newRevealed.push(idx);
     newGuessesLeft--;
     if (newRevealed.length >= 16) {
       status = 'finished';
-      winner = captain; // оба выиграли, но отметим капитана
+      winner = captain;
     } else if (newGuessesLeft <= 0) {
-      // Ход окончен, смена
       newCaptain = captain === 1 ? 2 : 1;
       newHintWord = null;
       newHintCount = null;
       newGuessesLeft = 0;
     }
   } else {
-    // Промах
     newMissed.push(idx);
     newCaptain = captain === 1 ? 2 : 1;
     newHintWord = null;
@@ -415,7 +419,7 @@ async function confirmChoice() {
 async function submitHint() {
   const wordEl = document.getElementById('hintWord');
   const countEl = document.getElementById('hintCount');
-  const word = wordEl.value.trim();
+  const word = wordEl.value.trim().toLowerCase();
   const count = parseInt(countEl.value);
 
   if (!word || word.includes(' ') || /\s/.test(word)) {
@@ -444,15 +448,14 @@ function showEndScreen() {
   const msg = document.getElementById('endMessage');
 
   if (s.winner === 0) {
-    endScreen.classList.add('lose');
+    endScreen.className = 'end-screen active lose';
     title.textContent = '💥 Поражение';
     msg.textContent = 'Вы наступили на чёрную карточку!';
   } else {
-    endScreen.classList.add('win');
+    endScreen.className = 'end-screen active win';
     title.textContent = '🏆 Победа!';
-    msg.textContent = `Все 16 карточек открыты!`;
+    msg.textContent = `Все 16 карточек успешно открыты!`;
   }
-  endScreen.classList.add('active');
 }
 
 // ======= СТАРТ =======
