@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Codenames Duo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; width: 100%; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #2c3e50; color: #ecf0f1;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #app { height: 100%; width: 100%; display: flex; flex-direction: column; }
+
+  /* Lobby */
+  .lobby { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; }
+  .lobby h1 { font-size: clamp(28px, 6vw, 48px); text-align: center; }
+  .lobby p { font-size: 16px; opacity: 0.8; text-align: center; max-width: 500px; }
+  .btn {
+    padding: 14px 28px; font-size: 18px; font-weight: 600;
+    background: #27ae60; color: white; border: none; border-radius: 8px;
+    cursor: pointer; transition: transform 0.1s, background 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { background: #7f8c8d; cursor: not-allowed; }
+  .btn-secondary { background: #2980b9; }
+  .btn-danger { background: #c0392b; }
+  .link-box {
+    background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;
+    font-family: monospace; font-size: 13px; word-break: break-all; max-width: 90vw;
+  }
+
+  /* Game */
+  .game-header {
+    padding: 8px 12px; background: rgba(0,0,0,0.3);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; flex-wrap: wrap; gap: 8px;
+  }
+  .game-header .role { font-weight: bold; color: #f1c40f; }
+  .game-header .hint-info { color: #3498db; }
+
+  .grid-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 6px; min-height: 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 4px;
+    width: min(100%, calc(100vh - 180px));
+    aspect-ratio: 1 / 1;
+    max-height: 100%;
+  }
+  .card {
+    background: #f5f5dc; color: #2c3e50;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 4px;
+    font-size: clamp(10px, 2.4vmin, 18px); font-weight: 600;
+    cursor: pointer; user-select: none;
+    transition: transform 0.1s, filter 0.2s;
+    word-break: break-word;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .card:active { transform: scale(0.95); }
+  .card.green { background: #27ae60; color: white; }
+  .card.black { background: #2c3e50; color: #2c3e50; }
+  .card.revealed { background: #27ae60; color: white; }
+  .card.missed { background: #f39c12; color: white; }
+  .card.disabled { cursor: default; opacity: 0.95; }
+
+  .captain-panel {
+    padding: 10px; background: rgba(0,0,0,0.4);
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .captain-panel input {
+    padding: 10px; border: none; border-radius: 6px;
+    font-size: 16px; background: white; color: #2c3e50;
+  }
+  .captain-panel input[type="text"] { flex: 1; min-width: 120px; }
+  .captain-panel input[type="number"] { width: 70px; }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+    padding: 20px;
+  }
+  .modal-bg.active { display: flex; }
+  .modal {
+    background: #34495e; padding: 24px; border-radius: 12px;
+    max-width: 400px; width: 100%; text-align: center;
+  }
+  .modal h3 { margin-bottom: 16px; font-size: 20px; }
+  .modal .word { font-size: 28px; color: #f1c40f; margin: 12px 0; font-weight: bold; }
+  .modal .buttons { display: flex; gap: 10px; margin-top: 20px; }
+  .modal .buttons .btn { flex: 1; }
+
+  .end-screen {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px; z-index: 200; padding: 20px;
+  }
+  .end-screen.active { display: flex; }
+  .end-screen h2 { font-size: 36px; text-align: center; }
+  .end-screen.win h2 { color: #27ae60; }
+  .end-screen.lose h2 { color: #c0392b; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <h3>Подтвердите выбор</h3>
+    <div class="word" id="confirmWord"></div>
+    <p>Выбрать эту карточку?</p>
+    <div class="buttons">
+      <button class="btn btn-danger" onclick="closeConfirm()">Отмена</button>
+      <button class="btn" onclick="confirmChoice()">Да, выбрать</button>
+    </div>
+  </div>
+</div>
+
+<div class="end-screen" id="endScreen">
+  <h2 id="endTitle"></h2>
+  <p id="endMessage"></p>
+  <button class="btn" onclick="location.href=location.pathname">Новая игра</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ======= НАСТРОЙКИ =======
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+// ======= СЛОВАРЬ =======
+const WORDS = [
+  'яблоко','река','космос','книга','солнце','луна','звезда','гора','море','лес',
+  'город','деревня','поезд','самолёт','машина','лошадь','собака','кошка','птица','рыба',
+  'стол','стул','окно','дверь','часы','телефон','компьютер','музыка','фильм','театр',
+  'школа','университет','учитель','врач','инженер','художник','писатель','повар','спорт','футбол',
+  'шахматы','зима','весна','лето','осень','дождь','снег','ветер','огонь','вода',
+  'земля','небо','камень','дерево','цветок','сад','парк','улица','площадь','мост',
+  'замок','башня','музей','библиотека','магазин','рынок','ресторан','кафе','банк','почта',
+  'король','рыцарь','принцесса','дракон','магия','меч','щит','корабль','остров','пират',
+  'пирамида','сфинкс','фараон','пустыня','оазис','верблюд','джунгли','тигр','слон','попугай',
+  'робот','ракета','планета','галактика','инопланетянин','лазер','спутник','космонавт','марс','венера'
+];
+
+// ======= SUPABASE =======
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const app = document.getElementById('app');
+let gameId = null;
+let myPlayer = null;     // 1 или 2
+let gameState = null;
+let pendingChoice = null;
+
+// ======= УТИЛИТЫ =======
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getGameIdFromURL() {
+  const params = new URLSearchParams(location.search);
+  return params.get('game');
+}
+
+function setMyPlayer(num) {
+  localStorage.setItem('codenames_my_player_' + gameId, num);
+  myPlayer = num;
+}
+
+function loadMyPlayer() {
+  myPlayer = parseInt(localStorage.getItem('codenames_my_player_' + gameId));
+  return myPlayer;
+}
+
+// ======= ЛОББИ =======
+function renderLobby(mode) {
+  app.innerHTML = `
+    <div class="lobby">
+      <h1>🕵️ Codenames Duo</h1>
+      <p>Кооперативная игра на двоих. Поделитесь ссылкой с напарником.</p>
+      ${mode === 'creating' ? `
+        <p>Создаём новую игру...</p>
+      ` : mode === 'waiting' ? `
+        <p>Ожидание второго игрока...</p>
+        <div class="link-box">${location.href}</div>
+        <button class="btn btn-secondary" onclick="copyLink()">📋 Скопировать ссылку</button>
+      ` : `
+        <button class="btn" onclick="createGame()">🎮 Начать игру</button>
+      `}
+    </div>
+  `;
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(location.href).then(() => {
+    alert('Ссылка скопирована!');
+  });
+}
+
+async function createGame() {
+  renderLobby('creating');
+  const pool = shuffle(WORDS).slice(0, 25);
+  const indices = Array.from({length: 25}, (_, i) => i);
+  const shuffledIdx = shuffle(indices);
+  const p1Green = shuffledIdx.slice(0, 8);
+  const p2Green = shuffledIdx.slice(8, 16);
+  const black = shuffledIdx.slice(16, 19);
+
+  const { data, error } = await sb.from('games').insert({
+    words: pool,
+    player1_green: p1Green,
+    player2_green: p2Green,
+    black: black,
+    status: 'waiting'
+  }).select().single();
+
+  if (error) { alert('Ошибка: ' + error.message); renderLobby(); return; }
+
+  gameId = data.id;
+  setMyPlayer(1);
+  history.replaceState(null, '', '?game=' + gameId);
+  renderLobby('waiting');
+  subscribeToGame();
+}
+
+async function joinGame(id) {
+  const { data, error } = await sb.from('games').select().eq('id', id).single();
+  if (error || !data) { alert('Игра не найдена'); location.href = location.pathname; return; }
+
+  gameId = id;
+  gameState = data;
+
+  if (data.status === 'finished') {
+    showEndScreen();
+    return;
+  }
+
+  if (!loadMyPlayer()) {
+    // Мы второй игрок
+    setMyPlayer(2);
+    if (data.status === 'waiting') {
+      await sb.from('games').update({ status: 'playing' }).eq('id', id);
+    }
+  }
+  renderGame();
+  subscribeToGame();
+}
+
+// ======= REALTIME =======
+function subscribeToGame() {
+  sb.channel('game-' + gameId)
+    .on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
+      (payload) => {
+        gameState = payload.new;
+        renderGame();
+        if (gameState.status === 'finished') showEndScreen();
+      }
+    )
+    .subscribe();
+}
+
+// ======= ИГРА =======
+function renderGame() {
+  if (!gameState) return;
+  const s = gameState;
+  const isCaptain = s.current_captain === myPlayer || s.current_captain === null;
+  const otherPlayer = myPlayer === 1 ? 2 : 1;
+  const captainGreen = s.current_captain ? s[`player${s.current_captain}_green`] : [];
+
+  let headerHTML = '';
+  if (s.status === 'playing') {
+    const role = isCaptain ? '🎯 Вы — капитан' : '🔍 Вы — угадывающий';
+    let hintInfo = '';
+    if (s.hint_word) {
+      hintInfo = `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось: ${s.guesses_left}`;
+    } else if (s.current_captain === null) {
+      hintInfo = 'Кто первый даст подсказку — тот и ходит';
+    } else {
+      hintInfo = 'Ожидание подсказки...';
+    }
+    headerHTML = `
+      <div class="game-header">
+        <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
+        <span class="hint-info">${hintInfo}</span>
+        <span>Открыто: ${s.revealed.length}/16</span>
+      </div>
+    `;
+  }
+
+  let gridHTML = '<div class="grid">';
+  for (let i = 0; i < 25; i++) {
+    const word = s.words[i];
+    let cls = 'card';
+    let clickable = false;
+
+    if (s.status === 'finished') {
+      cls += ' disabled';
+    } else if (s.revealed.includes(i)) {
+      cls += ' revealed disabled';
+    } else if (s.missed.includes(i)) {
+      cls += ' missed disabled';
+    } else if (isCaptain) {
+      // Капитан видит свою раскладку
+      if (s[`player${myPlayer}_green`].includes(i)) cls += ' green';
+      else if (s.black.includes(i)) cls += ' black';
+      // бежевый по умолчанию
+    } else {
+      // Угадывающий может кликать по закрытым
+      clickable = s.guesses_left > 0;
+      if (clickable) cls += '';
+      else cls += ' disabled';
+    }
+
+    const onclick = clickable ? `onclick="chooseCard(${i})"` : '';
+    gridHTML += `<div class="${cls}" ${onclick}>${word}</div>`;
+  }
+  gridHTML += '</div>';
+
+  let panelHTML = '';
+  if (s.status === 'playing' && isCaptain && !s.hint_word) {
+    const myGreenCount = s[`player${myPlayer}_green`].filter(i => !s.revealed.includes(i)).length;
+    panelHTML = `
+      <div class="captain-panel">
+        <input type="text" id="hintWord" placeholder="Слово-подсказка" maxlength="20">
+        <input type="number" id="hintCount" min="1" max="${myGreenCount}" value="1" placeholder="Число">
+        <button class="btn" onclick="submitHint()">Ищи</button>
+      </div>
+    `;
+  }
+
+  app.innerHTML = headerHTML + `<div class="grid-wrap">${gridHTML}</div>` + panelHTML;
+}
+
+function chooseCard(idx) {
+  pendingChoice = idx;
+  document.getElementById('confirmWord').textContent = gameState.words[idx];
+  document.getElementById('confirmModal').classList.add('active');
+}
+
+function closeConfirm() {
+  pendingChoice = null;
+  document.getElementById('confirmModal').classList.remove('active');
+}
+
+async function confirmChoice() {
+  if (pendingChoice === null) return;
+  const idx = pendingChoice;
+  closeConfirm();
+
+  const s = gameState;
+  const captain = s.current_captain;
+  const captainGreen = s[`player${captain}_green`];
+  const newRevealed = [...s.revealed];
+  const newMissed = [...s.missed];
+  let newGuessesLeft = s.guesses_left;
+  let newCaptain = captain;
+  let newHintWord = s.hint_word;
+  let newHintCount = s.hint_count;
+  let winner = null;
+  let status = 'playing';
+
+  if (s.black.includes(idx)) {
+    // Проигрыш
+    status = 'finished';
+    winner = 0;
+  } else if (captainGreen.includes(idx)) {
+    // Угадал
+    newRevealed.push(idx);
+    newGuessesLeft--;
+    if (newRevealed.length >= 16) {
+      status = 'finished';
+      winner = captain; // оба выиграли, но отметим капитана
+    } else if (newGuessesLeft <= 0) {
+      // Ход окончен, смена
+      newCaptain = captain === 1 ? 2 : 1;
+      newHintWord = null;
+      newHintCount = null;
+      newGuessesLeft = 0;
+    }
+  } else {
+    // Промах
+    newMissed.push(idx);
+    newCaptain = captain === 1 ? 2 : 1;
+    newHintWord = null;
+    newHintCount = null;
+    newGuessesLeft = 0;
+  }
+
+  await sb.from('games').update({
+    revealed: newRevealed,
+    missed: newMissed,
+    guesses_left: newGuessesLeft,
+    current_captain: newCaptain,
+    hint_word: newHintWord,
+    hint_count: newHintCount,
+    winner: winner,
+    status: status
+  }).eq('id', gameId);
+}
+
+async function submitHint() {
+  const wordEl = document.getElementById('hintWord');
+  const countEl = document.getElementById('hintCount');
+  const word = wordEl.value.trim();
+  const count = parseInt(countEl.value);
+
+  if (!word || word.includes(' ') || /\s/.test(word)) {
+    alert('Подсказка должна быть ОДНИМ словом (без пробелов)');
+    return;
+  }
+  const myGreenLeft = gameState[`player${myPlayer}_green`].filter(i => !gameState.revealed.includes(i)).length;
+  if (!count || count < 1 || count > myGreenLeft) {
+    alert(`Число должно быть от 1 до ${myGreenLeft}`);
+    return;
+  }
+
+  await sb.from('games').update({
+    current_captain: myPlayer,
+    hint_word: word,
+    hint_count: count,
+    guesses_left: count,
+    status: 'playing'
+  }).eq('id', gameId);
+}
+
+function showEndScreen() {
+  const s = gameState;
+  const endScreen = document.getElementById('endScreen');
+  const title = document.getElementById('endTitle');
+  const msg = document.getElementById('endMessage');
+
+  if (s.winner === 0) {
+    endScreen.classList.add('lose');
+    title.textContent = '💥 Поражение';
+    msg.textContent = 'Вы наступили на чёрную карточку!';
+  } else {
+    endScreen.classList.add('win');
+    title.textContent = '🏆 Победа!';
+    msg.textContent = `Все 16 карточек открыты!`;
+  }
+  endScreen.classList.add('active');
+}
+
+// ======= СТАРТ =======
+(async function init() {
+  const urlGameId = getGameIdFromURL();
+  if (urlGameId) {
+    await joinGame(urlGameId);
+  } else {
+    renderLobby();
+  }
+})();
+</script>
+</body>
+</html>
