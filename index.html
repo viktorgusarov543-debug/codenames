@@ -32,7 +32,8 @@
     font-size: 14px; flex-wrap: wrap; gap: 8px;
   }
   .game-header .role { font-weight: bold; color: #f1c40f; }
-  .game-header .hint-info { color: #3498db; text-align: right; }
+  .game-header .hint-info { color: #3498db; text-align: right; flex: 1; }
+  .game-header .sync-status { font-size: 12px; color: #2ecc71; white-space: nowrap; }
 
   .grid-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px; min-height: 0; }
   .grid {
@@ -108,7 +109,7 @@
 <div class="end-screen" id="endScreen">
   <h2 id="endTitle"></h2>
   <p id="endMessage" style="font-size: 18px; opacity: 0.9;"></p>
-  <button class="btn" onclick="location.href=location.pathname">🔄 Новая игра</button>
+  <button class="btn" onclick="forceNewGame()">🔄 Новая игра</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -160,26 +161,27 @@ function loadMyPlayer() {
   return myPlayer;
 }
 
-// === ГАРАНТИРОВАННОЕ ОБНОВЛЕНИЕ (POLLING) ===
+// === ГАРАНТИРОВАННЫЙ ПОЛЛИНГ (ОПРОС) ===
 function startPolling() {
   if (pollInterval) clearInterval(pollInterval);
-  pollInterval = setInterval(async () => {
-    if (!gameId) return;
-    console.log('Polling game state...');
-    const { data, error } = await sb.from('games').select().eq('id', gameId).single();
-    if (data && !error) {
-      // Проверяем, изменилось ли состояние, чтобы не перерисовывать зря
-      if (JSON.stringify(data) !== JSON.stringify(gameState)) {
-        console.log('State changed, updating UI');
-        gameState = data;
-        renderGame();
-        if (gameState.status === 'finished') {
-          stopPolling();
-          showEndScreen();
-        }
-      }
+  
+  // Сразу делаем первый запрос, не дожидаясь интервала
+  fetchAndUpdate();
+  
+  pollInterval = setInterval(fetchAndUpdate, 1500);
+}
+
+async function fetchAndUpdate() {
+  if (!gameId) return;
+  const { data, error } = await sb.from('games').select().eq('id', gameId).single();
+  if (data && !error) {
+    gameState = data; // ВСЕГДА обновляем состояние
+    renderGame();
+    if (gameState.status === 'finished') {
+      stopPolling();
+      showEndScreen();
     }
-  }, 1500); // Проверка каждые 1.5 секунды
+  }
 }
 
 function stopPolling() {
@@ -237,10 +239,11 @@ async function createGame() {
   if (error) { alert('Ошибка: ' + error.message); renderLobby(); return; }
 
   gameId = data.id;
+  gameState = data; // Сразу сохраняем состояние
   setMyPlayer(1);
   history.replaceState(null, '', '?game=' + gameId);
   renderLobby('waiting');
-  startPolling(); // Запускаем гарантированное обновление
+  startPolling();
 }
 
 async function joinGame(id) {
@@ -255,25 +258,21 @@ async function joinGame(id) {
   if (!loadMyPlayer()) {
     setMyPlayer(2);
     if (data.status === 'waiting') {
-      // Второй игрок зашел, меняем статус на playing
       await sb.from('games').update({ status: 'playing' }).eq('id', id);
     }
   }
   
   renderGame();
-  startPolling(); // Запускаем гарантированное обновление
+  startPolling();
 }
 
 function renderGame() {
   if (!gameState) return;
   const s = gameState;
-  console.log('Rendering game, status:', s.status, 'captain:', s.current_captain);
 
   // Показывать панель ввода, если: игра идет, подсказки еще нет, И (никто не капитан ИЛИ я капитан)
-  const showInputPanel = (s.status === 'playing' && !s.hint_word && (s.current_captain === null || s.current_captain === myPlayer));
-  
-  // Я вижу свои цвета, если я текущий загадывающий, ИЛИ если игра началась и я могу стать первым загадывающим
-  const isAsker = (s.current_captain === myPlayer) || (s.current_captain === null);
+  const isAsker = (s.current_captain === myPlayer) || (s.current_captain === null && s.status === 'playing');
+  const showInputPanel = (s.status === 'playing' && !s.hint_word && isAsker);
 
   let headerHTML = '';
   if (s.status === 'playing') {
@@ -285,7 +284,12 @@ function renderGame() {
     } else {
       hintInfo = 'Кто первый введет подсказку и нажмет «Ищи», тот станет загадывающим';
     }
-    headerHTML = `<div class="game-header"><span>Игрок ${myPlayer} | <span class="role">${role}</span></span><span class="hint-info">${hintInfo}</span></div>`;
+    headerHTML = `
+      <div class="game-header">
+        <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
+        <span class="hint-info">${hintInfo}</span>
+        <span class="sync-status">🟢 Онлайн</span>
+      </div>`;
   }
 
   let gridHTML = '<div class="grid">';
@@ -370,7 +374,8 @@ async function confirmChoice() {
 
   await sb.from('games').update({
     revealed: newRevealed, missed: newMissed, guesses_left: newGuessesLeft,
-    current_captain: newCaptain, hint_word: (newCaptain !== asker ? null : s.hint_word),
+    current_captain: newCaptain, 
+    hint_word: (newCaptain !== asker ? null : s.hint_word),
     hint_count: (newCaptain !== asker ? null : s.hint_count),
     winner: winner, status: status
   }).eq('id', gameId);
@@ -401,6 +406,11 @@ function showEndScreen() {
     document.getElementById('endTitle').textContent = '🏆 Победа!';
     document.getElementById('endMessage').textContent = 'Все 16 карточек открыты!';
   }
+}
+
+function forceNewGame() {
+  localStorage.removeItem('codenames_my_player_' + gameId);
+  location.href = location.pathname;
 }
 
 (async function init() {
