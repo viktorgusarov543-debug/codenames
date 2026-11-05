@@ -25,6 +25,7 @@
   .btn-secondary { background: #2980b9; }
   .btn-danger { background: #c0392b; }
   .btn-share { background: #8e44ad; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-small { padding: 10px 20px; font-size: 14px; width: auto; }
 
   .game-header {
     padding: 10px 12px; background: rgba(0,0,0,0.3);
@@ -137,6 +138,7 @@ let myPlayer = null;
 let gameState = null;
 let pendingChoice = null;
 let pollInterval = null;
+let currentView = null; // 'lobby' или 'game'
 
 function shuffle(arr) {
   const a = [...arr];
@@ -161,37 +163,42 @@ function loadMyPlayer() {
   return myPlayer;
 }
 
-// === ГАРАНТИРОВАННЫЙ ПОЛЛИНГ (ОПРОС) ===
+// === ГАРАНТИРОВАННЫЙ ПОЛЛИНГ ===
 function startPolling() {
   if (pollInterval) clearInterval(pollInterval);
-  
-  // Сразу делаем первый запрос, не дожидаясь интервала
   fetchAndUpdate();
-  
-  pollInterval = setInterval(fetchAndUpdate, 1500);
+  pollInterval = setInterval(fetchAndUpdate, 2000);
 }
 
 async function fetchAndUpdate() {
   if (!gameId) return;
-  const { data, error } = await sb.from('games').select().eq('id', gameId).single();
-  if (data && !error) {
-    gameState = data; // ВСЕГДА обновляем состояние
-    renderGame();
-    if (gameState.status === 'finished') {
-      stopPolling();
-      showEndScreen();
+  try {
+    const { data, error } = await sb.from('games').select().eq('id', gameId).single();
+    if (data && !error) {
+      const changed = JSON.stringify(data) !== JSON.stringify(gameState);
+      gameState = data;
+      if (changed) {
+        console.log('State updated:', data.status);
+        renderGame();
+      }
+      if (gameState.status === 'finished') {
+        stopPolling();
+        showEndScreen();
+      }
     }
+  } catch (e) {
+    console.error('Poll error:', e);
   }
 }
 
 function stopPolling() {
-  if (pollInterval) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
 }
 
 function renderLobby(mode) {
+  if (currentView === 'lobby_' + mode) return; // Не перерисовываем, если уже показываем
+  currentView = 'lobby_' + mode;
+  
   app.innerHTML = `
     <div class="lobby">
       <h1>🕵️ Codenames Duo</h1>
@@ -199,13 +206,18 @@ function renderLobby(mode) {
       ${mode === 'creating' ? '<p>Создаём игру...</p>' : ''}
       ${mode === 'waiting' ? `
         <button class="btn btn-share" onclick="shareGame()">📲 Поделиться с напарником</button>
-        <p style="font-size: 14px; opacity: 0.6;">Ожидание подключения...</p>
+        <p style="font-size: 14px; opacity: 0.6;">Ожидание второго игрока...</p>
         <button class="btn btn-secondary" onclick="copyLink()">📋 Скопировать ссылку</button>
+        <button class="btn btn-small btn-secondary" onclick="manualRefresh()">🔄 Проверить подключение</button>
       ` : `
         <button class="btn" onclick="createGame()">🎮 Начать новую игру</button>
       `}
     </div>
   `;
+}
+
+function manualRefresh() {
+  fetchAndUpdate();
 }
 
 async function shareGame() {
@@ -239,9 +251,10 @@ async function createGame() {
   if (error) { alert('Ошибка: ' + error.message); renderLobby(); return; }
 
   gameId = data.id;
-  gameState = data; // Сразу сохраняем состояние
+  gameState = data;
   setMyPlayer(1);
   history.replaceState(null, '', '?game=' + gameId);
+  currentView = null;
   renderLobby('waiting');
   startPolling();
 }
@@ -258,10 +271,13 @@ async function joinGame(id) {
   if (!loadMyPlayer()) {
     setMyPlayer(2);
     if (data.status === 'waiting') {
-      await sb.from('games').update({ status: 'playing' }).eq('id', id);
+      const { error: updateError } = await sb.from('games').update({ status: 'playing' }).eq('id', id);
+      if (updateError) console.error('Update error:', updateError);
+      else console.log('Status updated to playing');
     }
   }
   
+  currentView = null;
   renderGame();
   startPolling();
 }
@@ -270,33 +286,30 @@ function renderGame() {
   if (!gameState) return;
   const s = gameState;
 
-  // === ИСПРАВЛЕНИЕ: Если игра ещё ждёт второго игрока, показываем экран ожидания ===
   if (s.status === 'waiting') {
     renderLobby('waiting');
     return;
   }
-  // ================================================================================
 
+  currentView = 'game';
   const isAsker = (s.current_captain === myPlayer) || (s.current_captain === null && s.status === 'playing');
   const showInputPanel = (s.status === 'playing' && !s.hint_word && isAsker);
 
   let headerHTML = '';
-  if (s.status === 'playing') {
-    const role = isAsker ? '🎯 Вы — загадывающий' : '🔍 Вы — угадывающий';
-    let hintInfo = '';
-    if (s.hint_word) {
-      hintInfo = isAsker ? `Ваша подсказка: <b>${s.hint_word}</b> (${s.hint_count}). Ждем ходов...` 
-                         : `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось: ${s.guesses_left}`;
-    } else {
-      hintInfo = 'Кто первый введет подсказку и нажмет «Ищи», тот станет загадывающим';
-    }
-    headerHTML = `
-      <div class="game-header">
-        <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
-        <span class="hint-info">${hintInfo}</span>
-        <span class="sync-status">🟢 Онлайн</span>
-      </div>`;
+  const role = isAsker ? '🎯 Вы — загадывающий' : '🔍 Вы — угадывающий';
+  let hintInfo = '';
+  if (s.hint_word) {
+    hintInfo = isAsker ? `Ваша подсказка: <b>${s.hint_word}</b> (${s.hint_count}). Ждем ходов...` 
+                       : `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось: ${s.guesses_left}`;
+  } else {
+    hintInfo = 'Кто первый введет подсказку и нажмет «Ищи», тот станет загадывающим';
   }
+  headerHTML = `
+    <div class="game-header">
+      <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
+      <span class="hint-info">${hintInfo}</span>
+      <span class="sync-status">🟢 Онлайн</span>
+    </div>`;
 
   let gridHTML = '<div class="grid">';
   for (let i = 0; i < 25; i++) {
@@ -422,7 +435,7 @@ function forceNewGame() {
 (async function init() {
   const urlGameId = getGameIdFromURL();
   if (urlGameId) { await joinGame(urlGameId); } 
-  else { renderLobby(); }
+  else { currentView = null; renderLobby(); }
 })();
 </script>
 </body>
