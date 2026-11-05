@@ -270,7 +270,13 @@ function renderGame() {
   if (!gameState) return;
   const s = gameState;
 
-  // Показывать панель ввода, если: игра идет, подсказки еще нет, И (никто не капитан ИЛИ я капитан)
+  // === ИСПРАВЛЕНИЕ: Если игра ещё ждёт второго игрока, показываем экран ожидания ===
+  if (s.status === 'waiting') {
+    renderLobby('waiting');
+    return;
+  }
+  // ================================================================================
+
   const isAsker = (s.current_captain === myPlayer) || (s.current_captain === null && s.status === 'playing');
   const showInputPanel = (s.status === 'playing' && !s.hint_word && isAsker);
 
