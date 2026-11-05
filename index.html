@@ -65,19 +65,13 @@
   }
   .card:active { transform: scale(0.92); filter: brightness(0.9); }
   
-  /* Стили для капитана */
   .card.green { background: #27ae60; color: white; border: 2px solid #2ecc71; }
-  .card.black { 
-    background: #2c3e50; 
-    color: #e74c3c; 
-    border: 2px solid #e74c3c; 
-    font-weight: 900;
-    animation: pulse-black 2s infinite;
-  }
   
-  @keyframes pulse-black {
-    0%, 100% { border-color: #e74c3c; box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
-    50% { border-color: #c0392b; box-shadow: 0 0 15px rgba(192, 57, 43, 0.8); }
+  /* Просто черные карточки, без пульсации */
+  .card.black { 
+    background: #1a1a1a; 
+    color: #ffffff; 
+    border: 1px solid #34495e; 
   }
 
   .card.revealed { background: #27ae60; color: white; border: 2px solid #fff; }
@@ -86,13 +80,13 @@
   .card.disabled:active { transform: none; filter: none; }
 
   .warning-banner {
-    background: #c0392b; color: white; text-align: center; 
-    padding: 8px; font-weight: bold; font-size: 14px;
-    animation: blink-warning 1.5s infinite;
-  }
-  @keyframes blink-warning {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    background: #2c3e50; 
+    color: #f1c40f; 
+    text-align: center; 
+    padding: 8px; 
+    font-weight: bold; 
+    font-size: 14px;
+    border-top: 1px solid #f1c40f;
   }
 
   .captain-panel {
@@ -305,8 +299,6 @@ function subscribeToGame() {
       }
     )
     .subscribe((status) => {
-      // Принудительно перерисовываем при успешном подключении, 
-      // чтобы поймать переход из waiting в playing
       if (status === 'SUBSCRIBED' && gameState) {
         renderGame();
       }
@@ -318,20 +310,26 @@ function renderGame() {
   if (!gameState) return;
   const s = gameState;
   
-  // Если игра только началась и капитан не назначен, любой может дать первую подсказку
-  const isCaptain = s.current_captain === myPlayer || s.current_captain === null;
+  // Загадывающий: это либо мой ход, либо игра только началась (никто еще не ввел подсказку)
+  const isAsker = (s.current_captain === myPlayer) || (s.current_captain === null);
   
   let headerHTML = '';
   if (s.status === 'playing') {
-    const role = isCaptain ? '🎯 Вы — капитан' : '🔍 Вы — угадывающий';
+    const role = isAsker ? '🎯 Вы — загадывающий' : '🔍 Вы — угадывающий';
     let hintInfo = '';
+    
     if (s.hint_word) {
-      hintInfo = `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось попыток: ${s.guesses_left}`;
+      if (isAsker) {
+        hintInfo = `Ваша подсказка: <b>${s.hint_word}</b> (${s.hint_count}). Ждем ходов напарника...`;
+      } else {
+        hintInfo = `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось попыток: ${s.guesses_left}`;
+      }
     } else if (s.current_captain === null) {
-      hintInfo = 'Кто первый введет подсказку, тот и будет капитаном';
+      hintInfo = 'Кто первый введет подсказку и нажмет «Ищи», тот станет загадывающим';
     } else {
-      hintInfo = 'Ожидание подсказки от капитана...';
+      hintInfo = 'Ожидание подсказки от загадывающего...';
     }
+    
     headerHTML = `
       <div class="game-header">
         <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
@@ -352,8 +350,8 @@ function renderGame() {
       cls += ' revealed disabled';
     } else if (s.missed.includes(i)) {
       cls += ' missed disabled';
-    } else if (isCaptain) {
-      // Капитан видит свою раскладку
+    } else if (isAsker) {
+      // Загадывающий видит свою раскладку
       if (s[`player${myPlayer}_green`].includes(i)) cls += ' green';
       else if (s.black.includes(i)) cls += ' black';
     } else {
@@ -368,12 +366,13 @@ function renderGame() {
   gridHTML += '</div>';
 
   let warningHTML = '';
-  if (s.status === 'playing' && isCaptain) {
-    warningHTML = `<div class="warning-banner">⚠️ ВНИМАНИЕ: Избегайте красных (черных) карточек!</div>`;
+  if (s.status === 'playing' && isAsker) {
+    warningHTML = `<div class="warning-banner">⚠️ ВНИМАНИЕ: Избегайте черных карточек!</div>`;
   }
 
   let panelHTML = '';
-  if (s.status === 'playing' && isCaptain && !s.hint_word) {
+  // Панель ввода показывается только если мы загадывающий И подсказка еще не введена
+  if (s.status === 'playing' && isAsker && !s.hint_word) {
     const myGreenLeft = s[`player${myPlayer}_green`].filter(idx => !s.revealed.includes(idx)).length;
     panelHTML = `
       <div class="captain-panel">
@@ -404,40 +403,38 @@ async function confirmChoice() {
   closeConfirm();
 
   const s = gameState;
-  const captain = s.current_captain;
-  const captainGreen = s[`player${captain}_green`];
+  const asker = s.current_captain;
+  const askerGreen = s[`player${asker}_green`];
   
   const newRevealed = [...s.revealed];
   const newMissed = [...s.missed];
   let newGuessesLeft = s.guesses_left;
-  let newCaptain = captain;
+  let newCaptain = asker;
   let newHintWord = s.hint_word;
   let newHintCount = s.hint_count;
   let winner = null;
   let status = 'playing';
 
   if (s.black.includes(idx)) {
-    // Проигрыш
     status = 'finished';
     winner = 0;
-  } else if (captainGreen.includes(idx)) {
-    // Угадал
+  } else if (askerGreen.includes(idx)) {
     newRevealed.push(idx);
     newGuessesLeft--;
     if (newRevealed.length >= 16) {
       status = 'finished';
-      winner = captain; // Победа
+      winner = asker;
     } else if (newGuessesLeft <= 0) {
-      // Ход окончен, смена капитана
-      newCaptain = captain === 1 ? 2 : 1;
+      // Ход окончен, смена загадывающего
+      newCaptain = asker === 1 ? 2 : 1;
       newHintWord = null;
       newHintCount = null;
       newGuessesLeft = 0;
     }
   } else {
-    // Промах (бежевая карточка)
+    // Промах
     newMissed.push(idx);
-    newCaptain = captain === 1 ? 2 : 1;
+    newCaptain = asker === 1 ? 2 : 1;
     newHintWord = null;
     newHintCount = null;
     newGuessesLeft = 0;
