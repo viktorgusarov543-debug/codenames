@@ -10,27 +10,22 @@
     height: 100%; width: 100%; overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #2c3e50; color: #ecf0f1;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   #app { height: 100%; width: 100%; display: flex; flex-direction: column; }
 
-  /* Lobby */
   .lobby { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; text-align: center; }
   .lobby h1 { font-size: clamp(28px, 6vw, 48px); }
   .lobby p { font-size: 16px; opacity: 0.8; max-width: 500px; line-height: 1.5; }
   .btn {
     padding: 16px 32px; font-size: 18px; font-weight: 600;
     background: #27ae60; color: white; border: none; border-radius: 12px;
-    cursor: pointer; transition: transform 0.1s, background 0.2s;
-    width: 100%; max-width: 300px;
+    cursor: pointer; transition: transform 0.1s; width: 100%; max-width: 300px;
   }
   .btn:active { transform: scale(0.97); }
-  .btn:disabled { background: #7f8c8d; cursor: not-allowed; }
   .btn-secondary { background: #2980b9; }
   .btn-danger { background: #c0392b; }
   .btn-share { background: #8e44ad; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-  /* Game */
   .game-header {
     padding: 10px 12px; background: rgba(0,0,0,0.3);
     display: flex; justify-content: space-between; align-items: center;
@@ -39,79 +34,47 @@
   .game-header .role { font-weight: bold; color: #f1c40f; }
   .game-header .hint-info { color: #3498db; text-align: right; }
 
-  .grid-wrap {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 6px; min-height: 0;
-  }
+  .grid-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px; min-height: 0; }
   .grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    gap: 4px;
-    width: min(100%, calc(100vh - 200px));
-    aspect-ratio: 1 / 1;
-    max-height: 100%;
+    display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+    gap: 4px; width: min(100%, calc(100vh - 200px)); aspect-ratio: 1 / 1; max-height: 100%;
   }
   .card {
-    background: #f5f5dc; color: #2c3e50;
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    text-align: center; padding: 4px;
-    font-size: clamp(10px, 2.4vmin, 18px); font-weight: 600;
-    cursor: pointer; user-select: none;
-    transition: transform 0.15s, filter 0.2s, background 0.3s;
-    word-break: break-word;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    background: #f5f5dc; color: #2c3e50; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; text-align: center; padding: 4px;
+    font-size: clamp(10px, 2.4vmin, 18px); font-weight: 600; cursor: pointer; user-select: none;
+    transition: transform 0.15s; word-break: break-word; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
   .card:active { transform: scale(0.92); filter: brightness(0.9); }
-  
   .card.green { background: #27ae60; color: white; border: 2px solid #2ecc71; }
-  
-  /* Просто черные карточки, без пульсации */
-  .card.black { 
-    background: #1a1a1a; 
-    color: #ffffff; 
-    border: 1px solid #34495e; 
-  }
-
+  .card.black { background: #1a1a1a; color: #ffffff; border: 1px solid #34495e; }
   .card.revealed { background: #27ae60; color: white; border: 2px solid #fff; }
   .card.missed { background: #f39c12; color: white; }
   .card.disabled { cursor: default; opacity: 0.95; }
   .card.disabled:active { transform: none; filter: none; }
 
   .warning-banner {
-    background: #2c3e50; 
-    color: #f1c40f; 
-    text-align: center; 
-    padding: 8px; 
-    font-weight: bold; 
-    font-size: 14px;
-    border-top: 1px solid #f1c40f;
+    background: #2c3e50; color: #f1c40f; text-align: center; padding: 8px;
+    font-weight: bold; font-size: 14px; border-top: 1px solid #f1c40f;
   }
 
-  .captain-panel {
-    padding: 12px; background: rgba(0,0,0,0.4);
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-    justify-content: center;
+  .input-panel {
+    padding: 12px; background: rgba(0,0,0,0.4); display: flex; gap: 8px;
+    align-items: center; flex-wrap: wrap; justify-content: center;
   }
-  .captain-panel input {
-    padding: 12px; border: none; border-radius: 8px;
-    font-size: 16px; background: white; color: #2c3e50;
+  .input-panel input {
+    padding: 12px; border: none; border-radius: 8px; font-size: 16px; background: white; color: #2c3e50;
   }
-  .captain-panel input[type="text"] { flex: 1; min-width: 120px; }
-  .captain-panel input[type="number"] { width: 70px; text-align: center; }
+  .input-panel input[type="text"] { flex: 1; min-width: 120px; }
+  .input-panel input[type="number"] { width: 70px; text-align: center; }
 
-  /* Modal */
   .modal-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    display: none; align-items: center; justify-content: center; z-index: 100;
-    padding: 20px; backdrop-filter: blur(4px);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none;
+    align-items: center; justify-content: center; z-index: 100; padding: 20px; backdrop-filter: blur(4px);
   }
   .modal-bg.active { display: flex; }
   .modal {
-    background: #34495e; padding: 24px; border-radius: 12px;
-    max-width: 350px; width: 100%; text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    background: #34495e; padding: 24px; border-radius: 12px; max-width: 350px; width: 100%; text-align: center;
   }
   .modal h3 { margin-bottom: 16px; font-size: 20px; }
   .modal .word { font-size: 28px; color: #f1c40f; margin: 12px 0; font-weight: bold; }
@@ -119,9 +82,8 @@
   .modal .buttons .btn { flex: 1; padding: 12px; font-size: 16px; }
 
   .end-screen {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-    display: none; align-items: center; justify-content: center;
-    flex-direction: column; gap: 20px; z-index: 200; padding: 20px;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 200; padding: 20px;
   }
   .end-screen.active { display: flex; }
   .end-screen.win h2 { color: #27ae60; }
@@ -151,11 +113,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ======= НАСТРОЙКИ SUPABASE =======
 const SUPABASE_URL = 'https://xsmdcljfpaxdtdiiraqu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzbWRjbGpmcGF4ZHRkaWlyYXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MTM1MjcsImV4cCI6MjEwOTI4OTUyN30.Vw_wh6iF5ldrUYb61lnKo6pba1sGfZkbZ1YufMdKvMA';
 
-// ======= СЛОВАРЬ =======
 const WORDS = [
   'яблоко','река','космос','книга','солнце','луна','звезда','гора','море','лес',
   'город','деревня','поезд','самолёт','машина','лошадь','собака','кошка','птица','рыба',
@@ -175,7 +135,7 @@ let gameId = null;
 let myPlayer = null;
 let gameState = null;
 let pendingChoice = null;
-let subscription = null;
+let pollInterval = null;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -187,8 +147,7 @@ function shuffle(arr) {
 }
 
 function getGameIdFromURL() {
-  const params = new URLSearchParams(location.search);
-  return params.get('game');
+  return new URLSearchParams(location.search).get('game');
 }
 
 function setMyPlayer(num) {
@@ -201,13 +160,41 @@ function loadMyPlayer() {
   return myPlayer;
 }
 
-// ======= ЛОББИ =======
+// === ГАРАНТИРОВАННОЕ ОБНОВЛЕНИЕ (POLLING) ===
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    if (!gameId) return;
+    console.log('Polling game state...');
+    const { data, error } = await sb.from('games').select().eq('id', gameId).single();
+    if (data && !error) {
+      // Проверяем, изменилось ли состояние, чтобы не перерисовывать зря
+      if (JSON.stringify(data) !== JSON.stringify(gameState)) {
+        console.log('State changed, updating UI');
+        gameState = data;
+        renderGame();
+        if (gameState.status === 'finished') {
+          stopPolling();
+          showEndScreen();
+        }
+      }
+    }
+  }, 1500); // Проверка каждые 1.5 секунды
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+}
+
 function renderLobby(mode) {
   app.innerHTML = `
     <div class="lobby">
       <h1>🕵️ Codenames Duo</h1>
-      <p>Кооперативная игра на двоих. Поделитесь ссылкой с напарником.</p>
-      ${mode === 'creating' ? '<p>Создаём новую игру...</p>' : ''}
+      <p>Кооперативная игра на двоих.</p>
+      ${mode === 'creating' ? '<p>Создаём игру...</p>' : ''}
       ${mode === 'waiting' ? `
         <button class="btn btn-share" onclick="shareGame()">📲 Поделиться с напарником</button>
         <p style="font-size: 14px; opacity: 0.6;">Ожидание подключения...</p>
@@ -220,20 +207,14 @@ function renderLobby(mode) {
 }
 
 async function shareGame() {
-  const shareData = { title: 'Codenames Duo', text: 'Присоединяйся к игре!', url: location.href };
+  const shareData = { title: 'Codenames Duo', text: 'Присоединяйся!', url: location.href };
   if (navigator.share) {
-    try { await navigator.share(shareData); } catch (err) { console.log('Share canceled'); }
-  } else {
-    copyLink();
-  }
+    try { await navigator.share(shareData); } catch (err) { copyLink(); }
+  } else { copyLink(); }
 }
 
 function copyLink() {
-  navigator.clipboard.writeText(location.href).then(() => {
-    alert('Ссылка скопирована! Отправьте её напарнику.');
-  }).catch(() => {
-    prompt('Скопируйте ссылку вручную:', location.href);
-  });
+  navigator.clipboard.writeText(location.href).then(() => alert('Ссылка скопирована!')).catch(() => prompt('Скопируйте:', location.href));
 }
 
 async function createGame() {
@@ -259,7 +240,7 @@ async function createGame() {
   setMyPlayer(1);
   history.replaceState(null, '', '?game=' + gameId);
   renderLobby('waiting');
-  subscribeToGame();
+  startPolling(); // Запускаем гарантированное обновление
 }
 
 async function joinGame(id) {
@@ -269,114 +250,75 @@ async function joinGame(id) {
   gameId = id;
   gameState = data;
 
-  if (data.status === 'finished') {
-    showEndScreen();
-    return;
-  }
+  if (data.status === 'finished') { showEndScreen(); return; }
 
   if (!loadMyPlayer()) {
     setMyPlayer(2);
     if (data.status === 'waiting') {
+      // Второй игрок зашел, меняем статус на playing
       await sb.from('games').update({ status: 'playing' }).eq('id', id);
     }
   }
   
   renderGame();
-  subscribeToGame();
+  startPolling(); // Запускаем гарантированное обновление
 }
 
-// ======= REALTIME =======
-function subscribeToGame() {
-  if (subscription) sb.removeChannel(subscription);
-  
-  subscription = sb.channel('game-' + gameId)
-    .on('postgres_changes',
-      { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
-      (payload) => {
-        gameState = payload.new;
-        renderGame();
-        if (gameState.status === 'finished') showEndScreen();
-      }
-    )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED' && gameState) {
-        renderGame();
-      }
-    });
-}
-
-// ======= ИГРА =======
 function renderGame() {
   if (!gameState) return;
   const s = gameState;
+  console.log('Rendering game, status:', s.status, 'captain:', s.current_captain);
+
+  // Показывать панель ввода, если: игра идет, подсказки еще нет, И (никто не капитан ИЛИ я капитан)
+  const showInputPanel = (s.status === 'playing' && !s.hint_word && (s.current_captain === null || s.current_captain === myPlayer));
   
-  // Загадывающий: это либо мой ход, либо игра только началась (никто еще не ввел подсказку)
+  // Я вижу свои цвета, если я текущий загадывающий, ИЛИ если игра началась и я могу стать первым загадывающим
   const isAsker = (s.current_captain === myPlayer) || (s.current_captain === null);
-  
+
   let headerHTML = '';
   if (s.status === 'playing') {
     const role = isAsker ? '🎯 Вы — загадывающий' : '🔍 Вы — угадывающий';
     let hintInfo = '';
-    
     if (s.hint_word) {
-      if (isAsker) {
-        hintInfo = `Ваша подсказка: <b>${s.hint_word}</b> (${s.hint_count}). Ждем ходов напарника...`;
-      } else {
-        hintInfo = `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось попыток: ${s.guesses_left}`;
-      }
-    } else if (s.current_captain === null) {
-      hintInfo = 'Кто первый введет подсказку и нажмет «Ищи», тот станет загадывающим';
+      hintInfo = isAsker ? `Ваша подсказка: <b>${s.hint_word}</b> (${s.hint_count}). Ждем ходов...` 
+                         : `Подсказка: <b>${s.hint_word}</b> (${s.hint_count}), осталось: ${s.guesses_left}`;
     } else {
-      hintInfo = 'Ожидание подсказки от загадывающего...';
+      hintInfo = 'Кто первый введет подсказку и нажмет «Ищи», тот станет загадывающим';
     }
-    
-    headerHTML = `
-      <div class="game-header">
-        <span>Игрок ${myPlayer} | <span class="role">${role}</span></span>
-        <span class="hint-info">${hintInfo}</span>
-      </div>
-    `;
+    headerHTML = `<div class="game-header"><span>Игрок ${myPlayer} | <span class="role">${role}</span></span><span class="hint-info">${hintInfo}</span></div>`;
   }
 
   let gridHTML = '<div class="grid">';
   for (let i = 0; i < 25; i++) {
-    const word = s.words[i];
     let cls = 'card';
     let clickable = false;
 
-    if (s.status === 'finished') {
-      cls += ' disabled';
-    } else if (s.revealed.includes(i)) {
-      cls += ' revealed disabled';
-    } else if (s.missed.includes(i)) {
-      cls += ' missed disabled';
-    } else if (isAsker) {
-      // Загадывающий видит свою раскладку
+    if (s.status === 'finished') cls += ' disabled';
+    else if (s.revealed.includes(i)) cls += ' revealed disabled';
+    else if (s.missed.includes(i)) cls += ' missed disabled';
+    else if (isAsker) {
       if (s[`player${myPlayer}_green`].includes(i)) cls += ' green';
       else if (s.black.includes(i)) cls += ' black';
     } else {
-      // Угадывающий может кликать, если есть попытки
       clickable = s.guesses_left > 0;
       if (!clickable) cls += ' disabled';
     }
 
-    const onclick = clickable ? `onclick="chooseCard(${i})"` : '';
-    gridHTML += `<div class="${cls}" ${onclick}>${word}</div>`;
+    gridHTML += `<div class="${cls}" ${clickable ? `onclick="chooseCard(${i})"` : ''}>${s.words[i]}</div>`;
   }
   gridHTML += '</div>';
 
   let warningHTML = '';
-  if (s.status === 'playing' && isAsker) {
+  if (s.status === 'playing' && isAsker && s.hint_word) {
     warningHTML = `<div class="warning-banner">⚠️ ВНИМАНИЕ: Избегайте черных карточек!</div>`;
   }
 
   let panelHTML = '';
-  // Панель ввода показывается только если мы загадывающий И подсказка еще не введена
-  if (s.status === 'playing' && isAsker && !s.hint_word) {
+  if (showInputPanel) {
     const myGreenLeft = s[`player${myPlayer}_green`].filter(idx => !s.revealed.includes(idx)).length;
     panelHTML = `
-      <div class="captain-panel">
-        <input type="text" id="hintWord" placeholder="Слово-подсказка" maxlength="20" autocomplete="off">
+      <div class="input-panel">
+        <input type="text" id="hintWord" placeholder="Слово" maxlength="20" autocomplete="off">
         <input type="number" id="hintCount" min="1" max="${myGreenLeft}" value="1">
         <button class="btn" style="width: auto; padding: 12px 20px;" onclick="submitHint()">Ищи</button>
       </div>
@@ -410,98 +352,61 @@ async function confirmChoice() {
   const newMissed = [...s.missed];
   let newGuessesLeft = s.guesses_left;
   let newCaptain = asker;
-  let newHintWord = s.hint_word;
-  let newHintCount = s.hint_count;
   let winner = null;
   let status = 'playing';
 
   if (s.black.includes(idx)) {
-    status = 'finished';
-    winner = 0;
+    status = 'finished'; winner = 0;
   } else if (askerGreen.includes(idx)) {
     newRevealed.push(idx);
     newGuessesLeft--;
-    if (newRevealed.length >= 16) {
-      status = 'finished';
-      winner = asker;
-    } else if (newGuessesLeft <= 0) {
-      // Ход окончен, смена загадывающего
-      newCaptain = asker === 1 ? 2 : 1;
-      newHintWord = null;
-      newHintCount = null;
-      newGuessesLeft = 0;
-    }
+    if (newRevealed.length >= 16) { status = 'finished'; winner = asker; }
+    else if (newGuessesLeft <= 0) { newCaptain = asker === 1 ? 2 : 1; newGuessesLeft = 0; }
   } else {
-    // Промах
     newMissed.push(idx);
     newCaptain = asker === 1 ? 2 : 1;
-    newHintWord = null;
-    newHintCount = null;
     newGuessesLeft = 0;
   }
 
   await sb.from('games').update({
-    revealed: newRevealed,
-    missed: newMissed,
-    guesses_left: newGuessesLeft,
-    current_captain: newCaptain,
-    hint_word: newHintWord,
-    hint_count: newHintCount,
-    winner: winner,
-    status: status
+    revealed: newRevealed, missed: newMissed, guesses_left: newGuessesLeft,
+    current_captain: newCaptain, hint_word: (newCaptain !== asker ? null : s.hint_word),
+    hint_count: (newCaptain !== asker ? null : s.hint_count),
+    winner: winner, status: status
   }).eq('id', gameId);
 }
 
 async function submitHint() {
-  const wordEl = document.getElementById('hintWord');
-  const countEl = document.getElementById('hintCount');
-  const word = wordEl.value.trim().toLowerCase();
-  const count = parseInt(countEl.value);
+  const word = document.getElementById('hintWord').value.trim().toLowerCase();
+  const count = parseInt(document.getElementById('hintCount').value);
 
-  if (!word || word.includes(' ') || /\s/.test(word)) {
-    alert('Подсказка должна быть ОДНИМ словом (без пробелов)');
-    return;
-  }
+  if (!word || /\s/.test(word)) { alert('Подсказка должна быть ОДНИМ словом'); return; }
   const myGreenLeft = gameState[`player${myPlayer}_green`].filter(i => !gameState.revealed.includes(i)).length;
-  if (!count || count < 1 || count > myGreenLeft) {
-    alert(`Число должно быть от 1 до ${myGreenLeft}`);
-    return;
-  }
+  if (!count || count < 1 || count > myGreenLeft) { alert(`Число от 1 до ${myGreenLeft}`); return; }
 
   await sb.from('games').update({
-    current_captain: myPlayer,
-    hint_word: word,
-    hint_count: count,
-    guesses_left: count,
-    status: 'playing'
+    current_captain: myPlayer, hint_word: word, hint_count: count, guesses_left: count
   }).eq('id', gameId);
 }
 
 function showEndScreen() {
   const s = gameState;
   const endScreen = document.getElementById('endScreen');
-  const title = document.getElementById('endTitle');
-  const msg = document.getElementById('endMessage');
-
   if (s.winner === 0) {
     endScreen.className = 'end-screen active lose';
-    title.textContent = '💥 Поражение';
-    msg.textContent = 'Вы наступили на чёрную карточку! Игра окончена.';
+    document.getElementById('endTitle').textContent = '💥 Поражение';
+    document.getElementById('endMessage').textContent = 'Вы наступили на чёрную карточку!';
   } else {
     endScreen.className = 'end-screen active win';
-    title.textContent = '🏆 Победа!';
-    msg.textContent = 'Все 16 карточек успешно открыты!';
+    document.getElementById('endTitle').textContent = '🏆 Победа!';
+    document.getElementById('endMessage').textContent = 'Все 16 карточек открыты!';
   }
 }
 
-// ======= СТАРТ =======
 (async function init() {
   const urlGameId = getGameIdFromURL();
-  if (urlGameId) {
-    await joinGame(urlGameId);
-  } else {
-    renderLobby();
-  }
+  if (urlGameId) { await joinGame(urlGameId); } 
+  else { renderLobby(); }
 })();
 </script>
 </body>
